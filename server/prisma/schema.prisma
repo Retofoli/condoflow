@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  senha       String
+  perfil      Perfil
+  nome        String
+  condominios Condominio[] @relation("AdminCondos")
+  acesso      Condominio?  @relation("SindicoAcesso")
+  criadoEm    DateTime     @default(now())
+}
+
+model Condominio {
+  id               String            @id @default(cuid())
+  nome             String
+  saldo            Float             @default(0)
+  unidades         Int
+  taxaMensal       Float
+  fundoReserva     Float
+  diaArrecadacao   Int               @default(10)
+  adminId          String
+  sindicoId        String?           @unique
+  admin            Usuario           @relation("AdminCondos", fields: [adminId], references: [id])
+  sindico          Usuario?          @relation("SindicoAcesso", fields: [sindicoId], references: [id])
+  contasFixas      ContaFixa[]
+  extras           LancamentoExtra[]
+  entradasMensais  EntradaMensal[]
+  criadoEm         DateTime          @default(now())
+}
+
+model ContaFixa {
+  id            String     @id @default(cuid())
+  condominioId  String
+  nome          String
+  valor         Float
+  diaVencimento Int
+  categoria     String
+  ativa         Boolean    @default(true)
+  condominio    Condominio @relation(fields: [condominioId], references: [id], onDelete: Cascade)
+}
+
+model LancamentoExtra {
+  id           String         @id @default(cuid())
+  condominioId String
+  nome         String
+  valorTotal   Float
+  parcelas     Int            @default(1)
+  mesInicio    String
+  tipo         TipoLancamento
+  condominio   Condominio     @relation(fields: [condominioId], references: [id], onDelete: Cascade)
+  criadoEm     DateTime       @default(now())
+}
+
+model EntradaMensal {
+  id           String     @id @default(cuid())
+  condominioId String
+  mes          String
+  valor        Float
+  observacao   String?
+  condominio   Condominio @relation(fields: [condominioId], references: [id], onDelete: Cascade)
+  criadoEm     DateTime   @default(now())
+
+  @@unique([condominioId, mes])
+}
+
+enum Perfil {
+  ADMIN
+  SINDICO
+}
+
+enum TipoLancamento {
+  SAIDA
+  ENTRADA
+}
