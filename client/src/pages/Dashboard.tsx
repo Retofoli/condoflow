@@ -9,6 +9,21 @@ function formatarMoeda(valor: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function getMesAtual(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function labelMes(key: string) {
+  const meses: Record<string, string> = {
+    '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr',
+    '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago',
+    '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez',
+  };
+  const [y, m] = key.split('-');
+  return `${meses[m]}/${y.slice(2)}`;
+}
+
 interface NovoCondoForm {
   nome: string;
   saldo: string;
@@ -29,6 +44,20 @@ export function Dashboard() {
 
   function totalSaidas(condo: Condominio) {
     return condo.contasFixas.filter((f) => f.ativa).reduce((acc, f) => acc + f.valor, 0);
+  }
+
+  // Retorna o valor de entrada do mês:
+  // - Se há entrada real lançada: usa esse valor
+  // - Se não há entrada: usa taxaMensal como estimativa
+  function entradaDoMes(condo: Condominio): { valor: number; estimada: boolean; mes?: string } {
+    if (condo.ultimaEntrada) {
+      return {
+        valor: condo.ultimaEntrada.valor,
+        estimada: false,
+        mes: condo.ultimaEntrada.mes,
+      };
+    }
+    return { valor: condo.taxaMensal, estimada: true };
   }
 
   async function handleCriar(e: React.FormEvent) {
@@ -108,9 +137,11 @@ export function Dashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {condominios.map((condo) => {
-          const entradaMensal = condo.taxaMensal;
+          const entrada = entradaDoMes(condo);
           const saidaMensal = totalSaidas(condo);
-          const resultado = entradaMensal - saidaMensal;
+          const resultado = entrada.valor - saidaMensal;
+          const mesAtual = getMesAtual();
+          const entradaMesAtualLancada = condo.ultimaEntrada?.mes === mesAtual;
 
           return (
             <div
@@ -124,10 +155,10 @@ export function Dashboard() {
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                   resultado >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    resultado >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                   }`}
                 >
-                 {resultado >= 0 ? 'Positivo' : 'Negativo'}
+                  {resultado >= 0 ? 'Positivo' : 'Negativo'}
                 </span>
               </div>
 
@@ -139,8 +170,20 @@ export function Dashboard() {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Entrada/mês</span>
-                  <span className="font-medium text-gray-800">{formatarMoeda(entradaMensal)}</span>
+                  <span className="text-gray-500">
+                    Entrada/mês
+                    {entrada.estimada && (
+                      <span className="ml-1 text-xs text-amber-500" title="Estimativa — nenhuma entrada lançada ainda">
+                        (estimativa)
+                      </span>
+                    )}
+                    {!entrada.estimada && entrada.mes && (
+                      <span className="ml-1 text-xs text-gray-400">
+                        ({labelMes(entrada.mes)}{!entradaMesAtualLancada ? ' — mês anterior' : ''})
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-medium text-gray-800">{formatarMoeda(entrada.valor)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Saída fixa/mês</span>
@@ -153,6 +196,13 @@ export function Dashboard() {
                   </span>
                 </div>
               </div>
+
+              {/* Alerta se entrada do mês atual não foi lançada */}
+              {!entradaMesAtualLancada && (
+                <div className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  ⚠ Entrada de {labelMes(mesAtual)} ainda não lançada
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <button
@@ -222,7 +272,7 @@ export function Dashboard() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Taxa mensal (R$) *</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Taxa mensal estimada (R$) *</label>
                   <input
                     required
                     type="number"

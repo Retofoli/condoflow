@@ -1,13 +1,37 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
+// Retorna o mês atual no formato YYYY-MM
+function getMesAtual(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Include padrão: contas fixas, extras e última entrada mensal
+const includeCompleto = {
+  contasFixas: true,
+  extras: true,
+  entradasMensais: {
+    orderBy: { mes: 'desc' as const },
+    take: 1,
+  },
+};
+
 export async function listar(req: Request, res: Response): Promise<void> {
   const condominios = await prisma.condominio.findMany({
     where: { adminId: req.user!.id },
-    include: { contasFixas: true, extras: true },
+    include: includeCompleto,
     orderBy: { criadoEm: 'desc' },
   });
-  res.json(condominios);
+
+  // Mapeia adicionando ultimaEntrada como campo separado
+  const resultado = condominios.map((c) => ({
+    ...c,
+    ultimaEntrada: c.entradasMensais[0] ?? null,
+    entradasMensais: undefined, // não expõe a lista completa aqui
+  }));
+
+  res.json(resultado);
 }
 
 export async function criar(req: Request, res: Response): Promise<void> {
@@ -45,10 +69,14 @@ export async function criar(req: Request, res: Response): Promise<void> {
       fundoReserva,
       adminId: req.user!.id,
     },
-    include: { contasFixas: true, extras: true },
+    include: includeCompleto,
   });
 
-  res.status(201).json(condo);
+  res.status(201).json({
+    ...condo,
+    ultimaEntrada: condo.entradasMensais[0] ?? null,
+    entradasMensais: undefined,
+  });
 }
 
 async function verificarPropriedade(condoId: string, adminId: string, res: Response): Promise<boolean> {
@@ -92,10 +120,14 @@ export async function editar(req: Request, res: Response): Promise<void> {
       ...(taxaMensal !== undefined && { taxaMensal }),
       ...(fundoReserva !== undefined && { fundoReserva }),
     },
-    include: { contasFixas: true, extras: true },
+    include: includeCompleto,
   });
 
-  res.json(condo);
+  res.json({
+    ...condo,
+    ultimaEntrada: condo.entradasMensais[0] ?? null,
+    entradasMensais: undefined,
+  });
 }
 
 export async function remover(req: Request, res: Response): Promise<void> {
@@ -119,8 +151,12 @@ export async function atualizarSaldo(req: Request, res: Response): Promise<void>
   const condo = await prisma.condominio.update({
     where: { id },
     data: { saldo },
-    include: { contasFixas: true, extras: true },
+    include: includeCompleto,
   });
 
-  res.json(condo);
+  res.json({
+    ...condo,
+    ultimaEntrada: condo.entradasMensais[0] ?? null,
+    entradasMensais: undefined,
+  });
 }

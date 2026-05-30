@@ -30,6 +30,15 @@ export interface LancamentoExtra {
   criadoEm: string;
 }
 
+export interface EntradaMensal {
+  id: string;
+  condominioId: string;
+  mes: string;
+  valor: number;
+  observacao?: string | null;
+  criadoEm?: string;
+}
+
 export interface Condominio {
   id: string;
   nome: string;
@@ -42,6 +51,9 @@ export interface Condominio {
   contasFixas: ContaFixa[];
   extras: LancamentoExtra[];
   criadoEm: string;
+  // Última entrada real lançada pelo administrador
+  // null = nenhuma entrada lançada ainda (usa taxaMensal como estimativa)
+  ultimaEntrada?: EntradaMensal | null;
 }
 
 export interface AuthResponse {
