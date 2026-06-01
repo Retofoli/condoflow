@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import condominiosRoutes from './routes/condominios';
 import projecaoRouter from './routes/projecao';
 import entradasRouter from './routes/entradas';
+import pagamentosRouter from './routes/pagamentos';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -18,11 +19,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/condominios', condominiosRoutes);
 app.use('/api/condominios', projecaoRouter);
 app.use('/api/condominios', entradasRouter);
+app.use('/api/condominios', pagamentosRouter);
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => {

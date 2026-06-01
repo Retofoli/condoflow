@@ -9,6 +9,7 @@ import Projecao from './pages/Projecao';
 import Simulador from './pages/Simulador';
 import { Usuario } from './types';
 import Entradas from './pages/Entradas';
+import Pagamentos from './pages/Pagamentos';
 
 function Layout({ children, usuario, onLogout }: { children: React.ReactNode; usuario: Usuario; onLogout: () => void }) {
   return (
@@ -80,17 +81,29 @@ export default function App() {
           }
         />
         <Route
-  path="/condominios/:id/entradas"
-  element={
-    auth.usuario ? (
-      <Layout usuario={auth.usuario} onLogout={auth.logout}>
-        <Entradas />
-      </Layout>
-    ) : (
-      <Navigate to="/login" replace />
-    )
-  }
-/>
+          path="/condominios/:id/entradas"
+          element={
+            auth.usuario ? (
+              <Layout usuario={auth.usuario} onLogout={auth.logout}>
+                <Entradas />
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/condominios/:id/pagamentos"
+          element={
+            auth.usuario ? (
+              <Layout usuario={auth.usuario} onLogout={auth.logout}>
+                <Pagamentos />
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
         <Route
           path="/condominios/:id/simulador"
           element={
