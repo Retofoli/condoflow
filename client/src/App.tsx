@@ -10,6 +10,7 @@ import Simulador from './pages/Simulador';
 import { Usuario } from './types';
 import Entradas from './pages/Entradas';
 import Pagamentos from './pages/Pagamentos';
+import Sindicos from './pages/Sindicos';
 
 function Layout({ children, usuario, onLogout }: { children: React.ReactNode; usuario: Usuario; onLogout: () => void }) {
   return (
@@ -50,6 +51,18 @@ export default function App() {
             auth.usuario ? (
               <Layout usuario={auth.usuario} onLogout={auth.logout}>
                 <Dashboard />
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/sindicos"
+          element={
+            auth.usuario ? (
+              <Layout usuario={auth.usuario} onLogout={auth.logout}>
+                <Sindicos />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
