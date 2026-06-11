@@ -7,6 +7,7 @@ import projecaoRouter from './routes/projecao';
 import entradasRouter from './routes/entradas';
 import pagamentosRouter from './routes/pagamentos';
 import sindicosRouter from './routes/sindicos';
+import meuCondominioRouter from './routes/meuCondominio';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -26,6 +27,7 @@ app.use('/api/condominios', projecaoRouter);
 app.use('/api/condominios', entradasRouter);
 app.use('/api/sindicos', sindicosRouter);
 app.use('/api/condominios', pagamentosRouter);
+app.use('/api/meu-condominio', meuCondominioRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
