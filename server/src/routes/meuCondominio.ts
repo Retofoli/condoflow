@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
-import { resumo } from '../controllers/meuCondominio.controller';
+import { resumo, projecao, margem, simular } from '../controllers/meuCondominio.controller';
 import { autenticar } from '../middleware/auth';
 
 const router = Router();
@@ -16,5 +16,8 @@ function apenasSindico(req: Request, res: Response, next: NextFunction): void {
 
 router.use(autenticar, apenasSindico);
 router.get('/', resumo);
+router.get('/projecao', projecao);
+router.get('/margem', margem);
+router.post('/simular', simular);
 
 export default router;

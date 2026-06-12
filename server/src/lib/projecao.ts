@@ -143,3 +143,27 @@ export function simularGasto(
       : null,
   };
 }
+// Margem livre: quanto pode ser gasto a partir de cada mês
+// sem deixar NENHUM mês futuro negativo
+export interface MargemLivre {
+  margemMesAtual: number;
+  porMes: { mes: string; margem: number }[];
+}
+
+export function calcularMargem(condo: CondoDados, meses = 12): MargemLivre {
+  const projecao = calcularProjecao(condo, meses);
+  const porMes: { mes: string; margem: number }[] = [];
+
+  // Um gasto feito no mês i reduz o saldo de TODOS os meses dali em diante.
+  // Logo, a margem do mês i é o MENOR saldo projetado do mês i até o fim.
+  let menorSaldoDaqueleEmDiante = Infinity;
+  for (let i = projecao.length - 1; i >= 0; i--) {
+    menorSaldoDaqueleEmDiante = Math.min(menorSaldoDaqueleEmDiante, projecao[i].saldo);
+    porMes[i] = {
+      mes: projecao[i].mes,
+      margem: Math.max(0, Number(menorSaldoDaqueleEmDiante.toFixed(2))),
+    };
+  }
+
+  return { margemMesAtual: porMes[0].margem, porMes };
+}
