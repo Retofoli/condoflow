@@ -11,6 +11,7 @@ import { Usuario } from './types';
 import Entradas from './pages/Entradas';
 import Pagamentos from './pages/Pagamentos';
 import Sindicos from './pages/Sindicos';
+import MeuCondominio from './pages/MeuCondominio';
 
 function Layout({ children, usuario, onLogout }: { children: React.ReactNode; usuario: Usuario; onLogout: () => void }) {
   return (
@@ -49,8 +50,24 @@ export default function App() {
           path="/dashboard"
           element={
             auth.usuario ? (
+              auth.usuario.perfil === 'SINDICO' ? (
+                <Navigate to="/meu-condominio" replace />
+              ) : (
+                <Layout usuario={auth.usuario} onLogout={auth.logout}>
+                  <Dashboard />
+                </Layout>
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/meu-condominio"
+          element={
+            auth.usuario ? (
               <Layout usuario={auth.usuario} onLogout={auth.logout}>
-                <Dashboard />
+                <MeuCondominio />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
@@ -69,7 +86,7 @@ export default function App() {
             )
           }
         />
-        <Route
+                <Route
           path="/condominios/:id"
           element={
             auth.usuario ? (
