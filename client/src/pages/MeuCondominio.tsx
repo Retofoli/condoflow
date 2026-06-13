@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from 'recharts';
+import {
   getResumo,
   getProjecao,
   getMargem,
@@ -20,6 +24,16 @@ function labelMes(key: string) {
   };
   const [y, m] = key.split('-');
   return `${meses[m]} de ${y}`;
+}
+
+function labelMesAbrev(key: string) {
+  const meses: Record<string, string> = {
+    '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr',
+    '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago',
+    '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez',
+  };
+  const [, m] = key.split('-');
+  return meses[m] ?? m;
 }
 
 export default function MeuCondominio() {
@@ -150,7 +164,89 @@ export default function MeuCondominio() {
         </div>
       </div>
 
-      {/* Próximos meses (mini-lista, o gráfico vem na Etapa 5) */}
+      {/* Gráfico: Entra x Sai - próximos 6 meses */}
+      <div className="rounded-2xl bg-white border shadow-sm p-4 mb-4">
+        <p className="text-sm font-medium text-gray-600 mb-2">Entradas x Saídas — próximos 6 meses</p>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={projecao.slice(0, 6)} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+            <XAxis
+              dataKey="mes"
+              tickFormatter={labelMesAbrev}
+              tick={{ fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
+              tick={{ fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={32}
+            />
+            <Tooltip
+              formatter={(v: number) => formatReal(v)}
+              labelFormatter={labelMes}
+            />
+            <Bar dataKey="entrada" name="Entrada" fill="#86efac" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="saida" name="Saída" fill="#fca5a5" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Gráfico: evolução do saldo - 12 meses */}
+      <div className="rounded-2xl bg-white border shadow-sm p-4 mb-4">
+        <p className="text-sm font-medium text-gray-600 mb-2">Evolução do saldo — 12 meses</p>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart
+            data={projecao.map(m => ({
+              ...m,
+              saldoPositivo: Math.max(m.saldo, 0),
+              saldoNegativo: Math.min(m.saldo, 0),
+            }))}
+            margin={{ top: 4, right: 4, left: 4, bottom: 0 }}
+          >
+            <XAxis
+              dataKey="mes"
+              tickFormatter={labelMesAbrev}
+              tick={{ fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
+              tick={{ fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={32}
+            />
+            <Tooltip
+              formatter={(_v: number, _name: string, item: { payload?: MesProjetado }) =>
+                [formatReal(item.payload?.saldo ?? 0), 'Saldo']
+              }
+              labelFormatter={labelMes}
+            />
+            <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="3 3" />
+            <Area
+              type="monotone"
+              dataKey="saldoPositivo"
+              name="Saldo"
+              stroke="#34d399"
+              fill="#86efac"
+              fillOpacity={0.5}
+            />
+            <Area
+              type="monotone"
+              dataKey="saldoNegativo"
+              name="Saldo"
+              stroke="#f87171"
+              fill="#fca5a5"
+              fillOpacity={0.5}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Próximos meses (mini-lista) */}
       <div className="rounded-2xl bg-white border shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b">
           <p className="text-sm font-medium text-gray-600">Próximos meses</p>
