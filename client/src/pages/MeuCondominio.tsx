@@ -7,9 +7,11 @@ import {
   getResumo,
   getProjecao,
   getMargem,
+  simular,
   Resumo,
   MesProjetado,
   MargemLivre,
+  ResultadoSimulacao,
 } from '../services/meuCondominio';
 
 function formatReal(v: number) {
@@ -43,6 +45,11 @@ export default function MeuCondominio() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
+  const [valorSimulado, setValorSimulado] = useState('');
+  const [parcelasSimuladas, setParcelasSimuladas] = useState('1');
+  const [resultadoSimulacao, setResultadoSimulacao] = useState<ResultadoSimulacao | null>(null);
+  const [simulando, setSimulando] = useState(false);
+
   useEffect(() => {
     async function carregar() {
       try {
@@ -58,6 +65,20 @@ export default function MeuCondominio() {
     }
     carregar();
   }, []);
+
+  async function executarSimulacao() {
+    if (!valorSimulado || Number(valorSimulado) <= 0) return;
+    setSimulando(true);
+    setResultadoSimulacao(null);
+    try {
+      const d = new Date();
+      const mesAtual = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const res = await simular(Number(valorSimulado), Number(parcelasSimuladas), mesAtual);
+      setResultadoSimulacao(res);
+    } finally {
+      setSimulando(false);
+    }
+  }
 
   if (carregando) {
     return <div className="p-8 text-center text-gray-400">Carregando seu condomínio...</div>;
@@ -137,6 +158,73 @@ export default function MeuCondominio() {
               {primeiroNegativo && ` — a projeção indica caixa negativo em ${labelMes(primeiroNegativo)}`}.
             </p>
           </>
+        )}
+      </div>
+
+      {/* Simulador interativo */}
+      <div className="rounded-2xl bg-white border p-5 mb-4 shadow-sm">
+        <p className="text-sm font-medium text-gray-700 mb-1">Simular novo gasto</p>
+        <p className="text-xs text-gray-400 mb-4">
+          Digite o valor que quer gastar e veja se o caixa aguenta.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-1">Valor total (R$)</label>
+              <input
+                type="number"
+                min="1"
+                value={valorSimulado}
+                onChange={e => { setValorSimulado(e.target.value); setResultadoSimulacao(null); }}
+                placeholder="Ex: 5000"
+                className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
+            </div>
+            <div className="w-28">
+              <label className="block text-xs text-gray-500 mb-1">Parcelas</label>
+              <select
+                value={parcelasSimuladas}
+                onChange={e => { setParcelasSimuladas(e.target.value); setResultadoSimulacao(null); }}
+                className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                {Array.from({ length: 24 }, (_, i) => i + 1).map(n => (
+                  <option key={n} value={n}>{n}x</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={executarSimulacao}
+            disabled={simulando || !valorSimulado || Number(valorSimulado) <= 0}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+          >
+            {simulando ? 'Calculando...' : 'Simular'}
+          </button>
+        </div>
+
+        {resultadoSimulacao && (
+          <div className={`mt-4 rounded-xl border p-4 ${
+            resultadoSimulacao.podeContratar
+              ? 'bg-emerald-50 border-emerald-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <p className={`font-semibold text-sm ${
+              resultadoSimulacao.podeContratar ? 'text-emerald-800' : 'text-red-800'
+            }`}>
+              {resultadoSimulacao.podeContratar ? 'Pode contratar!' : 'Risco de caixa negativo'}
+            </p>
+            <p className={`text-xs mt-1 ${
+              resultadoSimulacao.podeContratar ? 'text-emerald-700' : 'text-red-700'
+            }`}>
+              {resultadoSimulacao.podeContratar
+                ? 'Com esse gasto, nenhum mês dos próximos 12 fica no vermelho.'
+                : `O caixa ficaria negativo a partir de ${
+                    labelMes(resultadoSimulacao.primeiroMesNegativo!)
+                  }. Revise o valor ou as parcelas.`}
+            </p>
+          </div>
         )}
       </div>
 
