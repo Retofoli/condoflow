@@ -251,6 +251,16 @@ export default function MeuCondominio() {
           <p className="text-lg font-bold text-gray-900 mt-1">{formatReal(resumo.saidaPrevistaMes)}</p>
         </div>
       </div>
+      {/* Fundo de reserva */}
+<div className="rounded-2xl bg-white border p-4 shadow-sm mb-4">
+  <p className="text-xs text-gray-500">Fundo de reserva (aplicado)</p>
+  <p className="text-lg font-bold text-blue-600 mt-1">
+    {formatReal(resumo.condominio.fundoReserva)}
+  </p>
+  <p className="text-xs text-gray-400 mt-1">
+    Valor reservado, separado do caixa do dia a dia.
+  </p>
+</div>
 
       {/* Gráfico: Entra x Sai - próximos 6 meses */}
       <div className="rounded-2xl bg-white border shadow-sm p-4 mb-4">

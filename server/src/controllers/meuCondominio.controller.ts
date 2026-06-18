@@ -39,7 +39,7 @@ export async function resumo(req: Request, res: Response): Promise<void> {
     .reduce((acc, p) => acc + (p.valorPago ?? 0), 0);
 
   res.json({
-    condominio: { id: condominio.id, nome: condominio.nome, saldo: condominio.saldo },
+    condominio: { id: condominio.id, nome: condominio.nome, saldo: condominio.saldo, fundoReserva: condominio.fundoReserva },
     mes,
     entradaMes,
     saidaPrevistaMes,

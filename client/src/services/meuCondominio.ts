@@ -1,7 +1,7 @@
 import api from './api';
 
 export interface Resumo {
-  condominio: { id: string; nome: string; saldo: number };
+  condominio: { id: string; nome: string; saldo: number; fundoReserva: number };
   mes: string;
   entradaMes: number;
   saidaPrevistaMes: number;
